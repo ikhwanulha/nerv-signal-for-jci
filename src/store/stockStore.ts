@@ -103,13 +103,59 @@ const initialNews: NewsItem[] = [
   },
 ];
 
+// ─── Initialize stock data ───
+function initStockData() {
+  const initStocks: StockQuote[] = idxStocks.slice(0, 100).map(s => {
+    const base = s.price || 1000
+    const volatility = base * 0.02
+    const price = base + (Math.random() - 0.5) * volatility * 50
+    const prevClose = base
+    const change = price - prevClose
+    return {
+      ticker: s.ticker, name: s.name,
+      price: Math.round(price), change: Math.round(change),
+      changePercent: Math.round((change / prevClose) * 10000) / 100,
+      open: Math.round(base + (Math.random() - 0.5) * volatility * 20),
+      high: Math.round(Math.max(price, base) + Math.random() * volatility * 10),
+      low: Math.round(Math.min(price, base) - Math.random() * volatility * 10),
+      previousClose: Math.round(prevClose),
+      volume: Math.round(100000 + Math.random() * 10000000),
+      value: Math.round(base * (100000 + Math.random() * 10000000)),
+      frequency: Math.round(1000 + Math.random() * 50000),
+      marketCap: s.marketCap ? s.marketCap * 1e9 : undefined,
+      sector: s.sector,
+    }
+  })
+
+  const initSectors = [...new Set(idxStocks.map(s => s.sector))].slice(0, 11).map(sector => ({
+    sector,
+    change: Math.round((Math.random() - 0.5) * 200 * 10) / 10,
+    changePercent: Math.round((Math.random() - 0.5) * 4 * 100) / 100,
+    volume: Math.round(Math.random() * 5e9 + 1e8),
+    marketCap: idxStocks.filter(s => s.sector === sector).reduce((a, s) => a + (s.marketCap || 0), 0) * 1e9,
+  }))
+
+  const initGainers = [...initStocks].sort((a, b) => b.changePercent - a.changePercent).slice(0, 10)
+  const initLosers = [...initStocks].sort((a, b) => a.changePercent - b.changePercent).slice(0, 10)
+  const initIHSG: IHSGQuote = {
+    price: 7234.56, change: 45.23, changePercent: 0.63,
+    open: 7189.34, high: 7245.12, low: 7185.67,
+    volume: 18500000000, value: 14200000000000, frequency: 1200000,
+    previousClose: 7189.34,
+  }
+
+  return { initStocks, initSectors, initGainers, initLosers, initIHSG }
+}
+
+const { initStocks, initSectors, initGainers, initLosers, initIHSG } = initStockData()
+
 export const useStockStore = create<StockState>((set, get) => ({
   // ─── Initial State ───
-  stocks: [],
-  ihsg: null,
-  gainers: [],
-  losers: [],
-  sectors: [],
+  stocks: initStocks,
+  ihsg: initIHSG,
+  gainers: initGainers,
+  losers: initLosers,
+  sectors: initSectors,
   signals: [],
   allStocks: idxStocks,
   news: initialNews,

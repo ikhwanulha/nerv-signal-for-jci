@@ -30,7 +30,7 @@ export default function DashboardPage() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
-  const prevPriceRef = useRef(ihsg.price);
+  const prevPriceRef = useRef(ihsg?.price || 0);
   // Update clock every second
   useEffect(() => {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);

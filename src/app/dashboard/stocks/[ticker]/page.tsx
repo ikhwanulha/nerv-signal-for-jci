@@ -177,16 +177,45 @@ export default function StockDetailPage() {
   const router = useRouter();
   const ticker = params.ticker as string;
 
-  const { stocks, signals, watchlist, addToWatchlist, removeFromWatchlist } = useStockStore();
+  const { stocks, signals, watchlist, addToWatchlist, removeFromWatchlist, allStocks } = useStockStore();
 
-  const stock = stocks.find((s) => s.ticker === ticker);
+  // Find stock in initialized stocks or allStocks
+  let stock = stocks.find((s) => s.ticker === ticker);
+  
+  // If not in stocks array, create a simulated quote from allStocks
+  if (!stock) {
+    const idxStock = allStocks.find((s) => s.ticker === ticker);
+    if (idxStock) {
+      // Use a simple hash of ticker as seed for stable random values
+      const seed = ticker.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
+      const seededRand = (offset: number) => (Math.sin(seed * offset + 1) * 10000) % 1 + 0.5;
+      const simPrice = idxStock.price || Math.round(1000 + seededRand(1) * 5000);
+      const simChange = (seededRand(2) - 0.5) * simPrice * 0.04;
+      stock = {
+        ticker: idxStock.ticker, name: idxStock.name,
+        price: Math.round(simPrice), change: Math.round(simChange),
+        changePercent: Math.round((simChange / simPrice) * 10000) / 100,
+        open: Math.round(simPrice * 0.99), high: Math.round(simPrice * 1.02),
+        low: Math.round(simPrice * 0.98), previousClose: Math.round(simPrice * 0.998),
+        volume: Math.round(100000 + seededRand(3) * 5000000),
+        value: Math.round(simPrice * (100000 + seededRand(4) * 5000000)),
+        frequency: Math.round(1000 + seededRand(5) * 30000),
+        marketCap: idxStock.marketCap ? idxStock.marketCap * 1e9 : undefined,
+        sector: idxStock.sector,
+        peRatio: Math.round(10 + seededRand(6) * 30),
+        pbRatio: Math.round((1 + seededRand(7) * 5) * 100) / 100,
+        dividendYield: Math.round(seededRand(8) * 5 * 100) / 100,
+      } as StockQuote;
+    }
+  }
   const stockSignals = signals.filter((s) => s.ticker === ticker);
   const isWatchlisted = watchlist.some(w => w.ticker === ticker);
 
   const candles = useMemo(() => {
     if (!stock) return [];
-    return generateCandles(stock.price, 50);
-  }, [stock?.price]);
+    const price = stock.price || stock.marketCap || 1000;
+    return generateCandles(price, 50);
+  }, [stock?.price, stock?.marketCap]);
 
   if (!stock) {
     return (

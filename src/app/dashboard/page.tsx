@@ -26,7 +26,7 @@ function formatVolume(v: number): string {
 
 export default function DashboardPage() {
   const router = useRouter();
-  const { ihsg, stocks, gainers, losers, sectors, news } = useStockStore();
+  const { ihsg, stocks, gainers, losers, sectors, news, refreshData } = useStockStore();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
   const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
@@ -36,6 +36,13 @@ export default function DashboardPage() {
     const interval = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Auto-refresh data every 10 seconds
+  useEffect(() => {
+    refreshData();
+    const interval = setInterval(refreshData, 10000);
+    return () => clearInterval(interval);
+  }, [refreshData]);
 
   // Price flash animation
   useEffect(() => {

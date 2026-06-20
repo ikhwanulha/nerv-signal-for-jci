@@ -44,6 +44,7 @@ interface StockState {
   setStocksLoading: (loading: boolean) => void;
   setIhsgLoading: (loading: boolean) => void;
   updateStockPrice: (ticker: string, price: number, change: number, changePercent: number, volume: number) => void;
+  refreshData: () => void;
   addToPortfolio: (position: PortfolioPosition) => void;
   removeFromPortfolio: (id: string) => void;
   addToWatchlist: (item: WatchlistItem) => void;
@@ -226,4 +227,17 @@ export const useStockStore = create<StockState>((set, get) => ({
     set((s) => ({ commandBarOpen: !s.commandBarOpen })),
 
   setSearchQuery: (q) => set({ searchQuery: q }),
+
+  refreshData: () => {
+    const state = get();
+    // Simulate price movements for all stocks
+    const updatedStocks = state.stocks.map(s => {
+      const change = Math.round((Math.random() - 0.5) * s.price * 0.04);
+      return { ...s, price: s.price + change, change, changePercent: Math.round((change / s.price) * 10000) / 100 };
+    });
+    // Update IHSG with small random change
+    const ihsgChange = (Math.random() - 0.5) * 20;
+    const updatedIhsg = state.ihsg ? { ...state.ihsg, price: state.ihsg.price + ihsgChange, change: ihsgChange, changePercent: Math.round((ihsgChange / state.ihsg.price) * 10000) / 100 } : state.ihsg;
+    set({ stocks: updatedStocks, ihsg: updatedIhsg, lastUpdate: Date.now() });
+  },
 }));

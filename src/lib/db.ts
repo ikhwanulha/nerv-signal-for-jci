@@ -1,9 +1,11 @@
-import { PrismaClient } from "@prisma/client"
+// Database client stub — Prisma will be added when PostgreSQL is configured
+// For now, the app runs with in-memory data via Zustand stores.
+// import { PrismaClient } from "@prisma/client"
 
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export const prisma = null as any
+
+export async function initDatabase() {
+  console.log("[DB] Database not configured — using in-memory stores")
+  return null
 }
-
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
-
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma

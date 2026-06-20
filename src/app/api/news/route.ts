@@ -49,7 +49,7 @@ async function parseRSS(url: string, source: string) {
       url: item.link,
       timestamp: new Date(item.pubDate).getTime() || Date.now(),
       summary: item.description.replace(/<[^>]*>/g, '').slice(0, 300).trim(),
-      tickers: (item as any).tickers || [],
+      tickers: (item as unknown as { tickers: string[] }).tickers || [],
     }))
   } catch {
     return []
@@ -64,7 +64,7 @@ export async function GET() {
     
     const news = results
       .filter(r => r.status === 'fulfilled')
-      .flatMap(r => (r as PromiseFulfilledResult<any[]>).value)
+      .flatMap(r => (r as PromiseFulfilledResult<unknown[]>).value as Array<{ id: string; title: string; source: string; url: string; timestamp: number; summary: string; tickers: string[] }>)
       .sort((a, b) => b.timestamp - a.timestamp)
       .slice(0, 50)
 

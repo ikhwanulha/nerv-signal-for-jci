@@ -1,4 +1,6 @@
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 // Yahoo Finance API proxy for IDX stocks (free, no API key required)
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
 const BASE = 'https://query1.finance.yahoo.com/v8/finance/chart'
 const QUOTE = 'https://query1.finance.yahoo.com/v7/finance/quote'
@@ -56,7 +58,7 @@ export async function fetchChart(ticker: string, range = '6mo', interval = '1d')
     const data = await res.json()
     const result = data?.chart?.result?.[0]
     if (!result) return []
-    const timestamps = result.timestamp || []
+    const timestamps: number[] = result.timestamp || []
     const quotes = result.indicators?.quote?.[0] || {}
     
     const candles: Array<{ time: string; open: number; high: number; low: number; close: number; volume: number }> = []
@@ -88,14 +90,18 @@ export async function searchStocks(query: string) {
     })
     if (!res.ok) return []
     const data = await res.json()
-    return (data.quotes || [])
-      .filter((q: { exchange: string; symbol: string }) => q.exchange === 'JKT' || (q.symbol || '').endsWith('.JK'))
-      .map((q: { symbol: string; longname: string; shortname: string; exchange: string; sector: string }) => ({
-        ticker: (q.symbol || '').replace('.JK', ''),
-        name: q.longname || q.shortname || '',
-        exchange: q.exchange,
-        sector: q.sector || '',
-      }))
+    const results: Array<{ ticker: string; name: string; exchange: string; sector: string }> = []
+    for (const q of (data.quotes || [])) {
+      if (q.exchange === 'JKT' || (q.symbol || '').endsWith('.JK')) {
+        results.push({
+          ticker: (q.symbol || '').replace('.JK', ''),
+          name: q.longname || q.shortname || '',
+          exchange: q.exchange,
+          sector: q.sector || '',
+        })
+      }
+    }
+    return results
   } catch {
     return []
   }
@@ -115,16 +121,20 @@ export async function fetchMultipleQuotes(tickers: string[]) {
     })
     if (!res.ok) return []
     const data = await res.json()
-    return (data?.quoteResponse?.result || []).map((q: { symbol: string; longName: string; shortName: string; regularMarketPrice: number; regularMarketChange: number; regularMarketChangePercent: number; regularMarketVolume: number; marketCap: number; sector: string }) => ({
-      ticker: (q.symbol || '').replace('.JK', ''),
-      name: q.longName || q.shortName || '',
-      price: q.regularMarketPrice,
-      change: q.regularMarketChange,
-      changePercent: q.regularMarketChangePercent,
-      volume: q.regularMarketVolume,
-      marketCap: q.marketCap,
-      sector: q.sector,
-    }))
+    const results: Array<{ ticker: string; name: string; price: number; change: number; changePercent: number; volume: number; marketCap: number; sector: string }> = []
+    for (const q of (data?.quoteResponse?.result || [])) {
+      results.push({
+        ticker: (q.symbol || '').replace('.JK', ''),
+        name: q.longName || q.shortName || '',
+        price: q.regularMarketPrice,
+        change: q.regularMarketChange,
+        changePercent: q.regularMarketChangePercent,
+        volume: q.regularMarketVolume,
+        marketCap: q.marketCap,
+        sector: q.sector,
+      })
+    }
+    return results
   } catch {
     return []
   }

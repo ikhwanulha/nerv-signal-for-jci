@@ -1,0 +1,130 @@
+@use '@/styles/mixins' as *;
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.15rem;
+}
+
+.title {
+  @include mono;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  margin-bottom: 0.25rem;
+}
+
+.subtitle {
+  @include text-sm;
+  color: var(--text-secondary);
+  text-align: center;
+  margin-bottom: 0.25rem;
+  line-height: 1.5;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.label {
+  @include mono;
+  @include text-xs;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input {
+  @include input-base;
+
+  &.inputError {
+    border-color: var(--accent-red);
+    box-shadow: 0 0 0 1px rgba(255, 51, 85, 0.2);
+  }
+}
+
+.fieldError {
+  @include text-xs;
+  color: var(--accent-red);
+  margin-top: 0.15rem;
+  font-family: var(--font-mono);
+}
+
+.submitButton {
+  @include mono;
+  @include text-sm;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0, 255, 65, 0.4);
+  background: rgba(0, 255, 65, 0.1);
+  color: var(--accent-green);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+
+  &:hover:not(:disabled) {
+    background: rgba(0, 255, 65, 0.18);
+    border-color: rgba(0, 255, 65, 0.6);
+    box-shadow: 0 0 12px rgba(0, 255, 65, 0.08);
+  }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
+}
+
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(0, 255, 65, 0.2);
+  border-top-color: var(--accent-green);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.errorMessage {
+  @include text-sm;
+  color: var(--accent-red);
+  background: rgba(255, 51, 85, 0.08);
+  border: 1px solid rgba(255, 51, 85, 0.2);
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.75rem;
+  text-align: center;
+  font-family: var(--font-mono);
+}
+
+.links {
+  display: flex;
+  justify-content: center;
+  margin-top: 0.5rem;
+}
+
+.link {
+  @include text-sm;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  transition: color var(--transition-fast);
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 0;
+
+  &:hover {
+    color: var(--accent-green);
+  }
+}

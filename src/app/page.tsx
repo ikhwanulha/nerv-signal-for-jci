@@ -1,10 +1,5 @@
-'use client'
-import { useEffect } from 'react'
+import { redirect } from 'next/navigation'
 
-export default function Home() {
-  useEffect(() => {
-    document.title = 'NERV SIGNAL FOR JCI — Bloomberg Terminal IHSG'
-  }, [])
-
-  return null
+export default function RootPage() {
+  redirect('/login')
 }

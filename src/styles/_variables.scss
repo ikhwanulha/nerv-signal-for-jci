@@ -1,0 +1,38 @@
+// ─── SCSS Variables (no CSS output - for module imports) ───
+
+// Colors as SCSS variables for module use
+$bg-primary: #0a0a0f;
+$bg-secondary: #12121a;
+$bg-card: #1a1a2e;
+$bg-input: #25253b;
+$bg-hover: #22224a;
+
+$text-primary: #e8e8e8;
+$text-secondary: #9a9aaf;
+$text-dim: #5a5a72;
+
+$accent-green: #00ff41;
+$accent-red: #ff3355;
+$accent-yellow: #ffd700;
+$accent-blue: #4488ff;
+
+$border-color: #2a2a42;
+$border-light: #3a3a52;
+
+$shadow-glow: 0 0 20px rgba(0, 255, 65, 0.05);
+$shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
+
+$font-mono: 'JetBrains Mono', 'Courier New', monospace;
+$font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+$radius-sm: 4px;
+$radius: 8px;
+$radius-lg: 12px;
+
+$sidebar-width: 260px;
+$bottom-nav-height: 70px;
+$header-height: 52px;
+
+$transition-fast: 150ms ease;
+$transition-base: 250ms ease;
+$transition-slow: 400ms ease;

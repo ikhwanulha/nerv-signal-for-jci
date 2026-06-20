@@ -1,0 +1,97 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+
+// ─── CSS Custom Properties (global, not for module imports) ───
+:root {
+  --bg-primary: #0a0a0f;
+  --bg-secondary: #12121a;
+  --bg-card: #1a1a2e;
+  --bg-input: #25253b;
+  --bg-hover: #22224a;
+  --text-primary: #e8e8e8;
+  --text-secondary: #9a9aaf;
+  --text-dim: #5a5a72;
+  --accent-green: #00ff41;
+  --accent-red: #ff3355;
+  --accent-yellow: #ffd700;
+  --accent-blue: #4488ff;
+  --border-color: #2a2a42;
+  --border-light: #3a3a52;
+  --shadow-glow: 0 0 20px rgba(0, 255, 65, 0.05);
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --font-mono: 'JetBrains Mono', 'Courier New', monospace;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --radius-sm: 4px;
+  --radius: 8px;
+  --radius-lg: 12px;
+  --sidebar-width: 260px;
+  --bottom-nav-height: 70px;
+  --header-height: 52px;
+  --transition-fast: 150ms ease;
+  --transition-base: 250ms ease;
+  --transition-slow: 400ms ease;
+}
+
+.theme-amber {
+  --accent-green: #ffab00;
+  --accent-red: #ff6d00;
+  --accent-blue: #ffab00;
+}
+.theme-green {
+  --accent-green: #00e676;
+  --accent-red: #ff5252;
+}
+.theme-blue {
+  --accent-green: #448aff;
+  --accent-red: #ff5252;
+}
+
+// ─── Reset ───
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+html, body {
+  height: 100%;
+  overflow: hidden;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+body { display: flex; flex-direction: column; }
+a { color: var(--accent-blue); text-decoration: none; }
+::selection { background: rgba(68, 136, 255, 0.3); color: #fff; }
+
+// ─── Scrollbar ───
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg-primary); }
+::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; &:hover { background: #444; } }
+
+// ─── Animations ───
+@keyframes flash-green {
+  0% { background-color: rgba(0, 255, 65, 0.3); }
+  100% { background-color: transparent; }
+}
+@keyframes flash-red {
+  0% { background-color: rgba(255, 51, 85, 0.3); }
+  100% { background-color: transparent; }
+}
+.price-flash-up { animation: flash-green 0.5s ease-out; }
+.price-flash-down { animation: flash-red 0.5s ease-out; }
+
+@keyframes scan-anim {
+  0% { top: 0; }
+  100% { top: 100%; }
+}
+.scan-line {
+  position: relative; overflow: hidden;
+  &::after {
+    content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.02), transparent);
+    animation: scan-anim 4s linear infinite;
+  }
+}
+
+// ─── Utility classes ───
+.text-green { color: var(--accent-green); }
+.text-red { color: var(--accent-red); }
+.text-yellow { color: var(--accent-yellow); }
+.text-dim { color: var(--text-secondary); }

@@ -1,28 +1,25 @@
 import type { Metadata, Viewport } from 'next'
-import './globals.css'
-import { QueryProvider } from '@/lib/query-provider'
-import { MainShell } from '@/components/Layout/MainShell'
+import './globals.scss'
+import { Providers } from './providers'
 
 export const metadata: Metadata = {
-  title: 'NERV SIGNAL FOR JCI — Bloomberg Terminal untuk IHSG',
-  description: 'Bloomberg-style terminal untuk IHSG & saham IDX oleh Ikhwanul Hakim',
+  title: 'NERV SIGNAL FOR JCI',
+  description: 'Bloomberg Terminal untuk IHSG & Saham IDX oleh Ikhwanul Hakim',
   authors: { name: 'Ikhwanul Hakim' },
 }
 
 export const viewport: Viewport = {
-  width: 'device-width',
-  initialScale: 1,
-  themeColor: '#0a0a0a',
+  width: 'device-width', initialScale: 1,
+  themeColor: '#0a0a0f',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="id" className="dark">
       <body>
-        <QueryProvider>
-          <MainShell />
+        <Providers>
           {children}
-        </QueryProvider>
+        </Providers>
       </body>
     </html>
   )

@@ -1,0 +1,74 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.bottomNav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: var(--bottom-nav-height);
+  background: var(--bg-secondary);
+  border-top: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  z-index: 150;
+  padding-bottom: env(safe-area-inset-bottom, 0);
+
+  // Hidden on desktop
+  @include desktop {
+    display: none;
+  }
+}
+
+.navItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.2rem;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  cursor: pointer;
+  padding: 0.35rem 0.75rem;
+  transition: color var(--transition-fast);
+  -webkit-tap-highlight-color: transparent;
+  position: relative;
+  flex: 1;
+  max-width: 80px;
+
+  &:hover {
+    color: var(--text-secondary);
+  }
+}
+
+.navItemActive {
+  color: var(--accent-green);
+}
+
+.iconWrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.icon {
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.activeDot {
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: var(--accent-green);
+  margin-top: 0.2rem;
+}
+
+.label {
+  @include mono;
+  @include text-xs;
+  white-space: nowrap;
+}

@@ -1,0 +1,308 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.notFound {
+  text-align: center;
+  padding: 3rem 1rem;
+
+  h2 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+    color: var(--accent-red);
+  }
+
+  p {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 1.5rem;
+  }
+}
+
+// ─── Header ───
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  margin-bottom: 0.75rem;
+
+  @include tablet {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+.headerLeft {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.ticker {
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--accent-green);
+}
+
+.companyName {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.sectorTag {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  background: var(--bg-input);
+  border: 1px solid var(--border-color);
+  border-radius: 3px;
+  padding: 0.1rem 0.4rem;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.price {
+  font-family: var(--font-mono);
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+
+.change {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.positive {
+  color: var(--accent-green);
+}
+
+.negative {
+  color: var(--accent-red);
+}
+
+// ─── Grid Layout ───
+.grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  @include tablet {
+    display: grid;
+    grid-template-columns: 1fr 340px;
+    gap: 0.75rem;
+  }
+
+  @include desktop {
+    grid-template-columns: 1fr 380px;
+  }
+}
+
+.chartSection {
+  min-width: 0;
+}
+
+.statsSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.sectionTitle {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding-bottom: 0.5rem;
+  margin-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+// ─── Chart ───
+.chartContainer {
+  width: 100%;
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: 320px;
+  }
+}
+
+// ─── Stats ───
+.statsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+
+.stat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.35rem 0;
+  border-bottom: 1px solid rgba(42, 42, 66, 0.3);
+}
+
+.statLabel {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.statValue {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+// ─── Actions ───
+.actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.btnBuy {
+  flex: 1;
+}
+
+.btnSell {
+  flex: 1;
+}
+
+// ─── Signals ───
+.signalList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.signalItem {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+}
+
+.signalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.directionBadge {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 600;
+  padding: 0.15rem 0.4rem;
+  border-radius: 3px;
+  text-transform: uppercase;
+}
+
+.strong_buy, .buy {
+  background: rgba(0, 255, 65, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0, 255, 65, 0.3);
+}
+
+.neutral {
+  background: rgba(255, 215, 0, 0.15);
+  color: var(--accent-yellow);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.sell, .strong_sell {
+  background: rgba(255, 51, 85, 0.15);
+  color: var(--accent-red);
+  border: 1px solid rgba(255, 51, 85, 0.3);
+}
+
+.signalTimeframe {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.signalReason {
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: 1.4;
+}
+
+.signalDetails {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 0.25rem;
+  margin-bottom: 0.5rem;
+}
+
+.signalDetail {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.05rem;
+}
+
+.signalDetailLabel {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+
+.signalDetailValue {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.confidenceBar {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.confidenceLabel {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-dim);
+}
+
+.confidenceTrack {
+  width: 100%;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.confidenceFill {
+  height: 100%;
+  background: var(--accent-green);
+  border-radius: 2px;
+  transition: width 0.5s ease;
+}

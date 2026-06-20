@@ -1,0 +1,150 @@
+@use '@/styles/variables' as *;
+@use '@/styles/mixins' as *;
+
+.tableWrapper {
+  display: none;
+
+  @include mobile {
+    display: block;
+    overflow-x: auto;
+  }
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+}
+
+.table th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  color: var(--text-dim);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+
+  &:hover {
+    background: var(--bg-hover);
+  }
+}
+
+.row td {
+  padding: 0.5rem 0.6rem;
+  border-bottom: 1px solid rgba(42, 42, 66, 0.4);
+  white-space: nowrap;
+}
+
+.tickerCell {
+  font-weight: 600;
+  color: var(--accent-green);
+}
+
+.nameCell {
+  color: var(--text-primary);
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.priceCell {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.positive {
+  color: var(--accent-green) !important;
+}
+
+.negative {
+  color: var(--accent-red) !important;
+}
+
+.volumeCell {
+  color: var(--text-secondary);
+}
+
+.sectorCell {
+  color: var(--text-dim);
+  font-size: 0.7rem;
+}
+
+// ─── Mobile Cards ───
+.mobileList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+
+  @include mobile {
+    display: none;
+  }
+}
+
+.mobileCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+
+  &:hover {
+    border-color: var(--border-light);
+  }
+}
+
+.mobileHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 0.35rem;
+}
+
+.mobileTicker {
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--accent-green);
+  display: block;
+}
+
+.mobileName {
+  font-size: 0.7rem;
+  color: var(--text-secondary);
+  display: block;
+  margin-top: 0.1rem;
+}
+
+.mobilePrice {
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.mobileDetails {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+}
+
+.mobileVolume {
+  color: var(--text-dim);
+}
+
+.mobileSector {
+  color: var(--text-dim);
+  background: var(--bg-input);
+  border-radius: 3px;
+  padding: 0.05rem 0.35rem;
+  font-size: 0.65rem;
+}

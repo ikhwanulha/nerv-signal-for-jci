@@ -30,8 +30,8 @@ export function Sidebar() {
         <div className="flex items-center gap-2">
           <span className="text-lg">🟢</span>
           <div>
-            <div className="text-sm font-bold font-mono text-[var(--text-primary)]">IDX TERMINAL</div>
-            <div className="text-[10px] font-mono text-[var(--text-dim)]">IHSG Market Data</div>
+            <div className="text-sm font-bold font-mono text-[var(--text-primary)]">NERV SIGNAL</div>
+            <div className="text-[10px] font-mono text-[var(--text-dim)]">FOR JCI · Ikhwanul Hakim</div>
           </div>
         </div>
       </div>

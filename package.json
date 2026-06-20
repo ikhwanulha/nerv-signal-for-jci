@@ -1,7 +1,9 @@
 {
-  "name": "ihsg-terminal",
+  "name": "nerv-signal-for-jci",
   "version": "1.0.0",
   "private": true,
+  "author": "Ikhwanul Hakim <ikhwanulha@gmail.com>",
+  "description": "Bloomberg-style terminal untuk IHSG & saham IDX",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

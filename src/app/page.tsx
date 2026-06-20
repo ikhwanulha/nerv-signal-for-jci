@@ -3,8 +3,7 @@ import { useEffect } from 'react'
 
 export default function Home() {
   useEffect(() => {
-    // Set IHSG as default title
-    document.title = 'IDX Terminal — IHSG Market Dashboard'
+    document.title = 'NERV SIGNAL FOR JCI — Bloomberg Terminal IHSG'
   }, [])
 
   return null

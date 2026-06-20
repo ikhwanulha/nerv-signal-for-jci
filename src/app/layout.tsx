@@ -3,8 +3,9 @@ import './globals.css'
 import { MainShell } from '@/components/Layout/MainShell'
 
 export const metadata: Metadata = {
-  title: 'IDX Terminal — IHSG Market Dashboard',
-  description: 'Bloomberg-style terminal for Indonesian stock market (IDX/IHSG)',
+  title: 'NERV SIGNAL FOR JCI — Bloomberg Terminal untuk IHSG',
+  description: 'Bloomberg-style terminal untuk IHSG & saham IDX oleh Ikhwanul Hakim',
+  authors: { name: 'Ikhwanul Hakim', email: 'ikhwanulha@gmail.com' },
 }
 
 export const viewport: Viewport = {

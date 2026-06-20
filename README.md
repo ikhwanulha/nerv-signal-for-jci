@@ -1,4 +1,7 @@
-# 🟢 IDX Terminal — Bloomberg-style IHSG Market Dashboard
+# 🟢 NERV SIGNAL FOR JCI
+
+Bloomberg-style terminal untuk IHSG & saham IDX.
+Dibuat oleh **Ikhwanul Hakim** — ikhwanulha@gmail.com
 
 Terminal keuangan profesional untuk Bursa Efek Indonesia (IDX/IHSG). Tampilan information-dense bergaya Bloomberg Terminal dengan dark theme.
 

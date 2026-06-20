@@ -135,6 +135,10 @@
 }
 
 // ─── Chart ───
+.chartWrap {
+  overflow: hidden;
+  border-radius: var(--radius-sm);
+}
 .chartContainer {
   width: 100%;
 

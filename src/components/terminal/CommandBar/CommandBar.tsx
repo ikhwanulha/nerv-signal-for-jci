@@ -5,6 +5,16 @@ import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStockStore } from '@/store/stockStore';
 import type { IDXStock } from '@/types';
+
+// Debounce hook
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 import styles from './CommandBar.module.scss';
 
 export default function CommandBar() {
@@ -14,7 +24,9 @@ export default function CommandBar() {
   const inputRef = useRef<HTMLInputElement>(null);
   const listRef = useRef<HTMLDivElement>(null);
 
-  const results = searchQuery.trim()
+  const debouncedQuery = useDebounce(searchQuery, 300);
+  
+  const results = debouncedQuery.trim()
     ? allStocks.filter(
         (s: IDXStock) =>
           s.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||

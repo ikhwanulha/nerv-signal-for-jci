@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server"
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
-  // Public paths — always allow
+  // Public paths
   const isPublic =
     pathname.startsWith("/login") ||
     pathname.startsWith("/register") ||
@@ -16,8 +16,7 @@ export function middleware(request: NextRequest) {
 
   if (isPublic) return NextResponse.next()
 
-  // For the demo, let all authenticated-looking requests through
-  // In production, use NextAuth middleware properly
+  // Dashboard and stock detail pages are accessible in demo mode
   return NextResponse.next()
 }
 

@@ -194,7 +194,7 @@ export default function StockDetailPage() {
         <Card className={styles.notFound}>
           <h2>Saham {ticker} tidak ditemukan</h2>
           <p>Saham dengan kode <strong>{ticker}</strong> tidak tersedia.</p>
-          <Button onClick={() => router.push('/')}>Kembali ke Dashboard</Button>
+          <Button onClick={() => router.push('/dashboard')}>Kembali ke Dashboard</Button>
         </Card>
       </div>
     );

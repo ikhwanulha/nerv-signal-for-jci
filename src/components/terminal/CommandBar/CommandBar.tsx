@@ -69,7 +69,7 @@ export default function CommandBar() {
   const selectStock = useCallback((ticker: string) => {
     toggleCommandBar();
     setSearchQuery('');
-    router.push(`/stocks/${ticker}`);
+    router.push(`/dashboard/stocks/${ticker}`);
   }, [router, toggleCommandBar, setSearchQuery]);
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

@@ -11,11 +11,10 @@ import styles from './layout.module.scss';
 
 // Map pathname to nav item id
 const pathToItem: Record<string, string> = {
-  '/': 'dashboard',
-  '/stocks': 'stocks',
-  '/portfolio': 'portfolio',
-  '/signals': 'signals',
-  '/settings': 'settings',
+  '/dashboard': 'dashboard',
+  '/dashboard/portfolio': 'portfolio',
+  '/dashboard/signals': 'signals',
+  '/dashboard/settings': 'settings',
 };
 
 const pageVariants = {
@@ -36,7 +35,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children }) => {
   const activeItem = pathToItem[pathname] || 'dashboard';
 
   const handleNavigate = (item: string) => {
-    const path = item === 'dashboard' ? '/' : `/${item}`;
+    const path = item === 'dashboard' ? '/dashboard' : `/dashboard/${item}`;
     router.push(path);
   };
 

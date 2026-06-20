@@ -53,7 +53,7 @@ export default function DashboardPage() {
   const isPositive = ihsg.change >= 0;
 
   const handleStockSelect = useCallback((ticker: string) => {
-    router.push(`/stocks/${ticker}`);
+    router.push(`/dashboard/stocks/${ticker}`);
   }, [router]);
 
   return (
@@ -184,7 +184,7 @@ export default function DashboardPage() {
                     <button
                       key={t}
                       className={styles.newsModalTicker}
-                      onClick={() => { setSelectedNews(null); router.push(`/stocks/${t}`); }}
+                      onClick={() => { setSelectedNews(null); router.push(`/dashboard/stocks/${t}`); }}
                     >
                       {t}
                     </button>

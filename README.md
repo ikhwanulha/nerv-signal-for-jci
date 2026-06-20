@@ -1,36 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 🟢 IDX Terminal — Bloomberg-style IHSG Market Dashboard
 
-## Getting Started
+Terminal keuangan profesional untuk Bursa Efek Indonesia (IDX/IHSG). Tampilan information-dense bergaya Bloomberg Terminal dengan dark theme.
 
-First, run the development server:
+## ✨ Fitur
+
+| Menu | Status | Deskripsi |
+|------|--------|-----------|
+| 📊 Dashboard | ✅ | IHSG real-time, top gainers/losers, berita |
+| 🔍 Screener | ✅ | Filter saham berdasarkan harga, volume, sektor |
+| 🔄 Signals | ✅ | Sinyal trading dengan SL/TP, confidence score |
+| 💡 Insight | ✅ | Analisis pasar dan berita terkini |
+| 📋 Aksi Korporasi | ✅ | Dividen, stock split, rights issue, RUPS |
+| 👁 Watchlist | ✅ | Pantau saham favorit + price alert |
+| 💼 Portfolio | ✅ | Tracking portfolio dengan P&L real-time |
+| 🗺 Sector Heatmap | ✅ | Performa sektor dalam grid visual |
+| 🔥 Unusual Volume | ✅ | Deteksi volume perdagangan tidak biasa |
+| 📐 Pattern Scanner | ✅ | Deteksi pola chart otomatis |
+| 🌐 Net Asing | ✅ | Data pembelian/penjualan investor asing |
+| 🚀 IPO Tracker | ✅ | Monitoring IPO terbaru |
+| 🔢 Kalkulator Lot | ✅ | Kalkulasi lot saham + biaya transaksi |
+| 📅 Kalender | ✅ | Kalender aksi korporasi & ekonomi |
+
+## 🚀 Tech Stack
+
+- **Framework:** Next.js 14 (App Router)
+- **State:** Zustand
+- **Charts:** Lightweight Charts (TradingView)
+- **Styling:** Tailwind CSS + CSS Variables
+- **Deploy:** Vercel
+
+## ⌨️ Keyboard Shortcuts
+
+| Shortcut | Aksi |
+|----------|------|
+| `⌘K` | Command bar / cari saham |
+| `⌘1-9` | Buka panel cepat |
+| `F5` | Refresh semua data |
+| `Esc` | Tutup command bar |
+
+## 🎨 Tema
+
+Tersedia 4 tema: Dark, Amber, Green, Blue — bisa diganti dari sidebar.
+
+## 🚀 Deploy ke Vercel
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev    # Development
+npm run build  # Production build
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 📦 Data Source
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- **Mock data** — built-in untuk development/demo
+- **@baguskto/saham** — NPM package untuk data real-time IDX
+- **idx-mcp-server** — MCP Server untuk data historis + analisis teknikal
+- **IDX Data License** — Untuk akses data resmi (berbayar)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 📝 TODO
 
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [ ] Integrasi @baguskto/saham untuk data real-time
+- [ ] Integrasi idx-mcp-server untuk data historis
+- [ ] AI-powered analysis (Gemini/Claude)
+- [ ] Paper trading engine
+- [ ] Notifikasi real-time (push/email)
+- [ ] Export CSV/Excel/PDF
+- [ ] Multi-bahasa (ID/EN)

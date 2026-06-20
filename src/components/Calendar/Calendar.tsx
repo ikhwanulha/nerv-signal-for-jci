@@ -23,15 +23,13 @@ const EVENT_LABELS: Record<string, string> = {
 const EVENT_TYPES = ['all', 'dividend', 'earnings', 'corporate_action', 'economic', 'ipo'] as const
 
 export function Calendar() {
-  const { calendarEvents, setSelectedTicker } = useStore()
+  const { setSelectedTicker } = useStore()
   const [currentDate, setCurrentDate] = useState(new Date())
   const [filterType, setFilterType] = useState<string>('all')
   const [selectedDay, setSelectedDay] = useState<number | null>(null)
 
   // Generate mock calendar events
   const events: CalendarEvent[] = useMemo(() => {
-    if (calendarEvents.length > 0) return calendarEvents
-
     const year = currentDate.getFullYear()
     const month = currentDate.getMonth()
     const daysInMonth = new Date(year, month + 1, 0).getDate()
@@ -59,7 +57,7 @@ export function Calendar() {
       })
     })
     return generated
-  }, [calendarEvents, currentDate])
+  }, [currentDate])
 
   const filteredEvents = filterType === 'all'
     ? events

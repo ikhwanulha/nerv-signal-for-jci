@@ -1,8 +1,9 @@
 'use client'
 import { useState, useEffect, useRef } from 'react'
 import { useStore } from '@/store/useStore'
-import { searchStocks } from '@/lib/api'
-import { StockQuote, PanelId } from '@/types'
+import { useSearchStocks } from '@/lib/api'
+import { PanelId } from '@/types'
+import { cn } from '@/lib/utils'
 import toast from 'react-hot-toast'
 
 const commands = [
@@ -25,62 +26,49 @@ const commands = [
 
 export function CommandBar() {
   const [query, setQuery] = useState('')
-  const [results, setResults] = useState<StockQuote[]>([])
   const [selectedIndex, setSelectedIndex] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const { toggleCommandBar, togglePanel, setSelectedTicker } = useStore()
+  const { data: searchResults } = useSearchStocks(query)
 
   useEffect(() => {
     inputRef.current?.focus()
   }, [])
 
   useEffect(() => {
-    if (query.length >= 1) {
-      searchStocks(query).then(setResults)
-    } else {
-      setResults([])
-    }
     setSelectedIndex(0)
-  }, [query])
+  }, [query, searchResults])
 
   const filteredCommands = query
     ? commands.filter(c => c.label.toLowerCase().includes(query.toLowerCase()) || c.id.includes(query.toLowerCase()))
     : commands
 
-  const totalItems = filteredCommands.length + results.length
+  const totalItems = filteredCommands.length + (searchResults?.length || 0)
 
   const handleSelect = (index: number) => {
     if (index < filteredCommands.length) {
       const cmd = filteredCommands[index]
       if (cmd.id === 'refresh') {
-        useStore.getState().refreshData()
-        toast.success('Data refreshed ✓')
+        toast.success('Data refreshed via command bar')
       } else {
         togglePanel(cmd.panel)
       }
     } else {
       const stockIndex = index - filteredCommands.length
-      const stock = results[stockIndex]
+      const stock = searchResults?.[stockIndex]
       if (stock) {
         setSelectedTicker(stock.ticker)
         togglePanel('dashboard')
-        toast(`📈 ${stock.ticker} — ${stock.name}`, { icon: '📊' })
+        toast(`📈 ${stock.ticker} — Rp${stock.price.toLocaleString('id-ID')} (${stock.changePercent >= 0 ? '+' : ''}${stock.changePercent.toFixed(2)}%)`, { icon: '📊' })
       }
     }
     toggleCommandBar()
   }
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex(i => Math.min(i + 1, totalItems - 1))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex(i => Math.max(i - 1, 0))
-    } else if (e.key === 'Enter') {
-      e.preventDefault()
-      handleSelect(selectedIndex)
-    }
+    if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedIndex(i => Math.min(i + 1, totalItems - 1)) }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedIndex(i => Math.max(i - 1, 0)) }
+    else if (e.key === 'Enter') { e.preventDefault(); handleSelect(selectedIndex) }
   }
 
   return (
@@ -89,19 +77,17 @@ export function CommandBar() {
         <input
           ref={inputRef}
           type="text"
-          placeholder="Cari saham (ticker/nama) atau ketik perintah..."
+          placeholder="Cari saham (ticker/nama) dari 430+ IDX stocks..."
           value={query}
           onChange={e => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
         />
         <div className="command-results">
           {filteredCommands.map((cmd, i) => (
-            <div
-              key={cmd.id}
+            <div key={cmd.id}
               className={`command-item ${i === selectedIndex ? 'active' : ''}`}
               onClick={() => handleSelect(i)}
-              onMouseEnter={() => setSelectedIndex(i)}
-            >
+              onMouseEnter={() => setSelectedIndex(i)}>
               <div className="flex items-center gap-2">
                 <span>{cmd.icon}</span>
                 <span>{cmd.label}</span>
@@ -110,28 +96,25 @@ export function CommandBar() {
             </div>
           ))}
           
-          {results.length > 0 && (
+          {searchResults && searchResults.length > 0 && (
             <>
               <div className="px-4 py-1 text-[10px] text-[var(--text-dim)] font-mono border-t border-[var(--border)]">
-                SAHAM — {results.length} hasil
+                SAHAM — {searchResults.length} hasil dari 430+ IDX stocks
               </div>
-              {results.map((stock, i) => {
+              {searchResults.map((stock, i) => {
                 const idx = filteredCommands.length + i
                 return (
-                  <div
-                    key={stock.ticker}
+                  <div key={stock.ticker}
                     className={`command-item ${idx === selectedIndex ? 'active' : ''}`}
                     onClick={() => handleSelect(idx)}
-                    onMouseEnter={() => setSelectedIndex(idx)}
-                  >
+                    onMouseEnter={() => setSelectedIndex(idx)}>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-[var(--text-primary)]">{stock.ticker}</span>
                       <span className="text-[var(--text-dim)]">{stock.name}</span>
+                      <span className="text-[10px] text-[var(--text-dim)] bg-[var(--bg-primary)] px-1 rounded">{stock.sector}</span>
                     </div>
                     <div className="flex items-center gap-3">
-                      <span className="font-mono">
-                        Rp{stock.price.toLocaleString('id-ID')}
-                      </span>
+                      <span className="font-mono">Rp{stock.price.toLocaleString('id-ID')}</span>
                       <span className={stock.change >= 0 ? 'text-green' : 'text-red'}>
                         {stock.change >= 0 ? '+' : ''}{stock.changePercent.toFixed(2)}%
                       </span>
@@ -142,9 +125,9 @@ export function CommandBar() {
             </>
           )}
 
-          {query.length > 0 && filteredCommands.length === 0 && results.length === 0 && (
+          {query.length > 0 && filteredCommands.length === 0 && (!searchResults || searchResults.length === 0) && (
             <div className="px-4 py-8 text-center text-[var(--text-dim)] font-mono">
-              Tidak ada hasil untuk &ldquo;{query}&rdquo;
+              Tidak ada hasil untuk &ldquo;{query}&rdquo; dari 430+ IDX stocks
             </div>
           )}
         </div>
@@ -153,6 +136,7 @@ export function CommandBar() {
           <span>↑↓ Navigasi</span>
           <span>⏎ Pilih</span>
           <span>Esc Tutup</span>
+          <span className="ml-auto">430+ IDX stocks</span>
         </div>
       </div>
     </div>

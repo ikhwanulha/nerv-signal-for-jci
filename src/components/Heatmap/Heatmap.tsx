@@ -2,12 +2,17 @@
 import { useMemo } from 'react'
 import { cn } from '@/lib/utils'
 import { useStore } from '@/store/useStore'
+import { useSectors } from '@/lib/api'
 
 export function Heatmap() {
-  const { sectors, setSelectedTicker } = useStore()
+  const { data: sectors } = useSectors()
+  const { setSelectedTicker } = useStore()
+
+  if (!sectors) return <div className="p-8 text-center text-xs font-mono text-[var(--text-dim)]">Loading sector data...</div>
 
   // Generate heatmap cells per sector with company breakdowns
   const cells = useMemo(() => {
+    if (!sectors) return {}
     const sectorCompanies: Record<string, { ticker: string; name: string; marketCap: number; changePercent: number }[]> = {
       'Financials': [
         { ticker: 'BBCA', name: 'BCA', marketCap: 1_200_000_000_000_000, changePercent: 0.74 },

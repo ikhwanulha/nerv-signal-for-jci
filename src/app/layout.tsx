@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import { QueryProvider } from '@/lib/query-provider'
 import { MainShell } from '@/components/Layout/MainShell'
 
 export const metadata: Metadata = {
@@ -18,8 +19,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="id" className="dark">
       <body>
-        <MainShell />
-        {children}
+        <QueryProvider>
+          <MainShell />
+          {children}
+        </QueryProvider>
       </body>
     </html>
   )

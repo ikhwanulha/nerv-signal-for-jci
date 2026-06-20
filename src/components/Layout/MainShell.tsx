@@ -4,20 +4,20 @@ import { CommandBar } from './CommandBar'
 import { Sidebar } from './Sidebar'
 import { StatusBar } from './StatusBar'
 import { ActivePanel } from './ActivePanel'
+import { NewsModal } from '@/components/News/NewsModal'
 import { Toaster } from 'react-hot-toast'
 import { useEffect } from 'react'
 
 export function MainShell() {
   const { theme, commandBarOpen, activePanel } = useStore()
 
+  // Keyboard shortcuts
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      // Ctrl+K / Cmd+K -> open command bar
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
         useStore.getState().toggleCommandBar()
       }
-      // Ctrl+1..9 -> quick panel switch
       const panelMap: Record<string, string> = {
         '1': 'dashboard', '2': 'screener', '3': 'signals',
         '4': 'insight', '5': 'watchlist', '6': 'portfolio',
@@ -27,14 +27,11 @@ export function MainShell() {
         e.preventDefault()
         useStore.getState().togglePanel(panelMap[e.key] as any)
       }
-      // Esc -> close command bar
       if (e.key === 'Escape' && commandBarOpen) {
         useStore.getState().toggleCommandBar()
       }
-      // F5 -> refresh
       if (e.key === 'F5') {
         e.preventDefault()
-        useStore.getState().refreshData()
       }
     }
     window.addEventListener('keydown', handler)
@@ -52,11 +49,13 @@ export function MainShell() {
             border: '1px solid #2a2a2a',
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: '12px',
-          }
+          },
+          duration: 3000,
         }}
       />
       
       {commandBarOpen && <CommandBar />}
+      <NewsModal />
       
       <div className="flex flex-1 overflow-hidden">
         <Sidebar />

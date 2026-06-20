@@ -2,34 +2,29 @@
 import { useStore } from '@/store/useStore'
 import { useEffect, useState, useRef, useCallback } from 'react'
 import { cn, formatNumber, formatPercent, formatPrice, calculateRiskReward, signalColor, signalLabel } from '@/lib/utils'
-import { TradingSignal } from '@/types'
+import { TradingSignal, StockQuote } from '@/types'
+import { useStockDetail, useStockCandles, useSignals } from '@/lib/api'
 
 export function StockDetail() {
-  const { selectedTicker, setSelectedTicker, stocks, signals, gainers, losers } = useStore()
+  const { selectedTicker, setSelectedTicker } = useStore()
   const [chartData, setChartData] = useState<{ time: number; value: number }[]>([])
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
-  // Find the stock from any available source
-  const stock = [...stocks, ...gainers, ...losers].find(
-    s => s.ticker === selectedTicker
-  )
+  const { data: stockDetail } = useStockDetail(selectedTicker)
+  const { data: candleData } = useStockCandles(selectedTicker, '1M')
+  const { data: allSignals } = useSignals()
 
-  // Generate mock candle-like chart data
+  const stock = stockDetail as StockQuote | null
+
+  // Generate chart data from candles
   useEffect(() => {
-    if (!selectedTicker) return
-    const basePrice = stock?.price || 5000
-    const points: { time: number; value: number }[] = []
-    let price = basePrice * 0.97
-    for (let i = 0; i < 60; i++) {
-      const change = (Math.random() - 0.48) * basePrice * 0.02
-      price += change
-      points.push({
-        time: Date.now() - (60 - i) * 3600000,
-        value: Math.max(price, basePrice * 0.85),
-      })
-    }
+    if (!candleData || candleData.length === 0) return
+    const points: { time: number; value: number }[] = candleData.map(c => ({
+      time: new Date(c.time).getTime(),
+      value: c.close,
+    }))
     setChartData(points)
-  }, [selectedTicker, stock?.price])
+  }, [selectedTicker, candleData])
 
   // Draw canvas chart
   useEffect(() => {
@@ -100,7 +95,7 @@ export function StockDetail() {
   }, [chartData])
 
   // Get signals for this stock
-  const stockSignals = signals.filter(s => s.ticker === selectedTicker)
+  const stockSignals = (allSignals || []).filter(s => s.ticker === selectedTicker)
 
   const handleClose = useCallback(() => {
     setSelectedTicker(null)

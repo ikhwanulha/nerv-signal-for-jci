@@ -1,160 +1,338 @@
-import { StockQuote, CandleData, ScreenerFilter, TopGainer, TopLoser } from '@/types'
-import { useStore } from '@/store/useStore'
+import { useQuery, UseQueryResult } from '@tanstack/react-query'
+import { StockQuote, IHSGQuote, CandleData, TradingSignal, TopGainer, TopLoser, SectorPerformance, NewsItem } from '@/types'
+import { idxStocks } from '@/data/idx-stocks'
 
-const BASE_URL = 'https://api.example.com' // Placeholder - use actual API
+const BASE_PRICES: Record<string, number> = {}
 
-// ─── @baguskto/saham API ───
-// If @baguskto/saham is installed, use it. Otherwise, use fallback.
-let sahamClient: any = null
-
-try {
-  // Dynamic import for when package is available
-  // const Saham = require('@baguskto/saham')
-  // sahamClient = new Saham()
-} catch {
-  console.log('@baguskto/saham not available, using mock data')
-}
-
-export async function fetchIHSG() {
-  const store = useStore.getState()
-  store.setLoading('ihsg', true)
-  try {
-    // Try @baguskto/saham first
-    if (sahamClient) {
-      // const data = await sahamClient.getIndex('IHSG')
-      // return data
-    }
-    // Fallback to mock
-    const mock = getMockIHSG()
-    store.updateIHSG(mock)
-    return mock
-  } catch (err) {
-    store.setError('ihsg', 'Failed to fetch IHSG data')
-    return null
-  } finally {
-    store.setLoading('ihsg', false)
+function getBasePrice(ticker: string, marketCap?: number): number {
+  if (!BASE_PRICES[ticker]) {
+    if (marketCap && marketCap > 500) BASE_PRICES[ticker] = 5000 + Math.random() * 50000
+    else if (marketCap && marketCap > 100) BASE_PRICES[ticker] = 1000 + Math.random() * 10000
+    else BASE_PRICES[ticker] = 100 + Math.random() * 5000
+    BASE_PRICES[ticker] = Math.round(BASE_PRICES[ticker] / 25) * 25
   }
+  return BASE_PRICES[ticker]
 }
 
-export async function fetchTopGainers(): Promise<TopGainer[]> {
-  return getMockGainers(8)
+function simulatePrice(ticker: string, marketCap?: number) {
+  const base = getBasePrice(ticker, marketCap)
+  const volatility = base * 0.02
+  const time = Date.now()
+  const drift = Math.sin(time / 30000 + ticker.charCodeAt(0)) * volatility * 0.3
+  const noise = (Math.random() - 0.5) * volatility * 0.5
+  const price = Math.round(base + drift + noise)
+  const open = Math.round(base - volatility * 0.1 + Math.random() * volatility * 0.2)
+  const high = Math.round(Math.max(price, open) + Math.random() * volatility * 0.3)
+  const low = Math.round(Math.min(price, open) - Math.random() * volatility * 0.3)
+  const prevClose = Math.round(base)
+  const change = price - prevClose
+  const changePercent = (change / prevClose) * 100
+  const volume = Math.round(100000 + Math.random() * 10000000 + Math.sin(time / 60000 + ticker.charCodeAt(1)) * 5000000)
+  const value = volume * price
+  const frequency = Math.round(volume / 1000 + Math.random() * 5000)
+  return { price, open, high, low, previousClose: prevClose, change, changePercent, volume, value, frequency }
 }
 
-export async function fetchTopLosers(): Promise<TopLoser[]> {
-  return getMockLosers(5)
+function getCompanyName(ticker: string): string {
+  const stock = idxStocks.find(s => s.ticker === ticker)
+  return stock?.name || `${ticker} Tbk`
 }
 
-export async function searchStocks(query: string): Promise<StockQuote[]> {
-  const mockStocks: StockQuote[] = [
-    { ticker: 'BBCA', name: 'Bank Central Asia', price: 10250, change: 75, changePercent: 0.74, volume: 25000000, value: 256250000000, frequency: 15000, open: 10175, high: 10300, low: 10150, previousClose: 10175, sector: 'Financials' },
-    { ticker: 'BBRI', name: 'Bank Rakyat Indonesia', price: 5800, change: 50, changePercent: 0.87, volume: 45000000, value: 261000000000, frequency: 22000, open: 5750, high: 5825, low: 5725, previousClose: 5750, sector: 'Financials' },
-    { ticker: 'TLKM', name: 'Telkom Indonesia', price: 3950, change: -25, changePercent: -0.63, volume: 35000000, value: 138250000000, frequency: 18000, open: 3975, high: 4000, low: 3925, previousClose: 3975, sector: 'Telecommunications' },
-    { ticker: 'ASII', name: 'Astra International', price: 6225, change: 100, changePercent: 1.63, volume: 15000000, value: 93375000000, frequency: 8500, open: 6125, high: 6250, low: 6125, previousClose: 6125, sector: 'Automotive' },
-    { ticker: 'UNVR', name: 'Unilever Indonesia', price: 2850, change: -50, changePercent: -1.72, volume: 20000000, value: 57000000000, frequency: 12000, open: 2900, high: 2925, low: 2825, previousClose: 2900, sector: 'Consumer' },
-    { ticker: 'GGRM', name: 'Gudang Garam', price: 24250, change: 500, changePercent: 2.11, volume: 5000000, value: 121250000000, frequency: 3500, open: 23750, high: 24500, low: 23650, previousClose: 23750, sector: 'Consumer' },
-    { ticker: 'ADRO', name: 'Adaro Energy', price: 3125, change: -75, changePercent: -2.34, volume: 40000000, value: 125000000000, frequency: 20000, open: 3200, high: 3225, low: 3100, previousClose: 3200, sector: 'Energy' },
-    { ticker: 'BYAN', name: 'Bayan Resources', price: 18750, change: -250, changePercent: -1.32, volume: 8000000, value: 150000000000, frequency: 4500, open: 19000, high: 19100, low: 18600, previousClose: 19000, sector: 'Energy' },
-    { ticker: 'KLBF', name: 'Kalbe Farma', price: 1625, change: 25, changePercent: 1.56, volume: 30000000, value: 48750000000, frequency: 14000, open: 1600, high: 1650, low: 1595, previousClose: 1600, sector: 'Healthcare' },
-    { ticker: 'HMSP', name: 'HM Sampoerna', price: 825, change: -15, changePercent: -1.79, volume: 55000000, value: 45375000000, frequency: 25000, open: 840, high: 845, low: 820, previousClose: 840, sector: 'Consumer' },
-    { ticker: 'ICBP', name: 'Indofood CBP', price: 10975, change: 125, changePercent: 1.15, volume: 8000000, value: 87800000000, frequency: 5200, open: 10850, high: 11050, low: 10825, previousClose: 10850, sector: 'Consumer' },
-    { ticker: 'INDF', name: 'Indofood Sukses Makmur', price: 6725, change: -50, changePercent: -0.74, volume: 12000000, value: 80700000000, frequency: 7500, open: 6775, high: 6800, low: 6700, previousClose: 6775, sector: 'Consumer' },
-    { ticker: 'CPIN', name: 'Charoen Pokphand', price: 4825, change: 75, changePercent: 1.58, volume: 10000000, value: 48250000000, frequency: 6000, open: 4750, high: 4850, low: 4725, previousClose: 4750, sector: 'Consumer' },
-    { ticker: 'EXCL', name: 'XL Axiata', price: 2175, change: 50, changePercent: 2.35, volume: 15000000, value: 32625000000, frequency: 8000, open: 2125, high: 2200, low: 2115, previousClose: 2125, sector: 'Telecommunications' },
-    { ticker: 'ISAT', name: 'Indosat Ooredoo', price: 7350, change: 125, changePercent: 1.73, volume: 5000000, value: 36750000000, frequency: 3200, open: 7225, high: 7400, low: 7200, previousClose: 7225, sector: 'Telecommunications' },
-  ]
-  
-  if (!query) return mockStocks
-  const q = query.toUpperCase()
-  return mockStocks.filter(s => s.ticker.includes(q) || s.name.toUpperCase().includes(q))
+// ─── Properly typed hooks ───
+
+export function useIHSG(): UseQueryResult<IHSGQuote, Error> {
+  return useQuery<IHSGQuote, Error>({
+    queryKey: ['ihsg'],
+    queryFn: async () => {
+      const time = Date.now()
+      const baseIHSG = 7234.567
+      const drift = Math.sin(time / 25000) * 50
+      const noise = (Math.random() - 0.5) * 15
+      const price = Math.round((baseIHSG + drift + noise) * 1000) / 1000
+      const prevClose = 7189.337
+      const change = Math.round((price - prevClose) * 1000) / 1000
+      const changePercent = Math.round((change / prevClose) * 10000) / 100
+      return {
+        price, change, changePercent,
+        open: Math.round((baseIHSG - 30 + Math.random() * 60) * 1000) / 1000,
+        high: Math.round((price + Math.random() * 20) * 1000) / 1000,
+        low: Math.round((price - Math.random() * 20) * 1000) / 1000,
+        volume: 15000000000 + Math.round(Math.random() * 5000000000),
+        value: 12e12 + Math.random() * 3e12,
+        frequency: 1000000 + Math.round(Math.random() * 400000),
+        previousClose: prevClose,
+      }
+    },
+    refetchInterval: 5000,
+  })
 }
 
-export async function fetchCandles(ticker: string, interval: string = '1M'): Promise<CandleData[]> {
-  const count = 
-    interval === '1D' ? 93 :
-    interval === '1W' ? 5 * 24 :
-    interval === '1M' ? 22 :
-    interval === '3M' ? 66 :
-    interval === '6M' ? 132 :
-    interval === '1Y' ? 264 : 528
-  
-  const candles: CandleData[] = []
-  const now = new Date()
-  let basePrice = 5000 + Math.random() * 45000
-  
-  for (let i = count; i >= 0; i--) {
-    const date = new Date(now)
-    date.setDate(date.getDate() - i)
-    const volatility = basePrice * 0.03
-    const open = basePrice + (Math.random() - 0.5) * volatility
-    const close = open + (Math.random() - 0.45) * volatility
-    const high = Math.max(open, close) + Math.random() * volatility * 0.5
-    const low = Math.min(open, close) - Math.random() * volatility * 0.5
-    
-    candles.push({
-      time: date.toISOString().split('T')[0],
-      open: Math.round(open),
-      high: Math.round(high),
-      low: Math.round(low),
-      close: Math.round(close),
-      volume: Math.round(Math.random() * 50000000),
-    })
-    basePrice = close
-  }
-  return candles
+export function useMarketStats(): UseQueryResult<{ advancing: number; declining: number; unchanged: number; total: number }, Error> {
+  return useQuery({
+    queryKey: ['marketStats'],
+    queryFn: async () => {
+      const advancing = 180 + Math.floor(Math.random() * 60)
+      const declining = 120 + Math.floor(Math.random() * 40)
+      const unchanged = 80 + Math.floor(Math.random() * 30)
+      return { advancing, declining, unchanged, total: advancing + declining + unchanged }
+    },
+    refetchInterval: 15000,
+  })
 }
 
-export async function fetchNews(): Promise<any[]> {
-  return useStore.getState().news
+export function useTopGainers(): UseQueryResult<TopGainer[], Error> {
+  return useQuery<TopGainer[], Error>({
+    queryKey: ['topGainers'],
+    queryFn: async () => {
+      return idxStocks
+        .map(s => {
+          const p = simulatePrice(s.ticker, s.marketCap)
+          return { ticker: s.ticker, name: s.name, ...p, sector: s.sector }
+        })
+        .sort((a, b) => b.changePercent - a.changePercent)
+        .slice(0, 15) as TopGainer[]
+    },
+    refetchInterval: 5000,
+  })
 }
 
-// Mocks
-function getMockIHSG() {
-  return {
-    price: 7234.567,
-    change: 45.23,
-    changePercent: 0.63,
-    open: 7189.34,
-    high: 7245.12,
-    low: 7185.67,
-    volume: 18.5e9,
-    value: 14.2e12,
-    frequency: 1_200_000,
-    previousClose: 7189.337,
-  }
+export function useTopLosers(): UseQueryResult<TopLoser[], Error> {
+  return useQuery<TopLoser[], Error>({
+    queryKey: ['topLosers'],
+    queryFn: async () => {
+      return idxStocks
+        .map(s => {
+          const p = simulatePrice(s.ticker, s.marketCap)
+          return { ticker: s.ticker, name: s.name, ...p, sector: s.sector }
+        })
+        .sort((a, b) => a.changePercent - b.changePercent)
+        .slice(0, 15) as TopLoser[]
+    },
+    refetchInterval: 5000,
+  })
 }
 
-function getMockGainers(count: number): TopGainer[] {
-  return Array.from({length: count}, (_, i) => ({
-    ticker: ['GGRM', 'UNVR', 'TLKM', 'ASII', 'BBCA', 'EXCL', 'ADRO', 'BYAN'][i % 8] || `STK${i}`,
-    name: ['Gudang Garam', 'Unilever', 'Telkom', 'Astra', 'BCA', 'XL Axiata', 'Adaro', 'Bayan'][i % 8] || `Stock ${i}`,
-    price: [24250, 2850, 3950, 6225, 10250, 2175, 3125, 18750][i % 8],
-    change: [500, 75, -25, 100, 75, 50, -75, -250][i % 8],
-    changePercent: [2.11, 1.56, 0.74, 1.63, 0.74, 2.35, -2.34, -1.32][i % 8],
-    volume: Math.random() * 50_000_000,
-    value: Math.random() * 1e12,
-    frequency: Math.random() * 50000,
-    open: 24000,
-    high: 24500,
-    low: 23650,
-    previousClose: 23750,
-    sector: ['Consumer', 'Consumer', 'Telecom', 'Automotive', 'Finance', 'Telecom', 'Energy', 'Energy'][i % 8],
-  }))
+export function useSectors(): UseQueryResult<SectorPerformance[], Error> {
+  return useQuery<SectorPerformance[], Error>({
+    queryKey: ['sectors'],
+    queryFn: async () => {
+      const sectors = [...new Set(idxStocks.map(s => s.sector))]
+      return sectors.map(sector => {
+        const sectorStocks = idxStocks.filter(s => s.sector === sector)
+        const totalChange = sectorStocks.reduce((sum, s) => {
+          const p = simulatePrice(s.ticker, s.marketCap)
+          return sum + p.changePercent
+        }, 0)
+        const totalVolume = sectorStocks.reduce((sum, s) => {
+          const p = simulatePrice(s.ticker, s.marketCap)
+          return sum + p.volume
+        }, 0)
+        return {
+          sector,
+          change: totalChange / sectorStocks.length,
+          changePercent: totalChange / sectorStocks.length,
+          volume: totalVolume,
+          marketCap: sectorStocks.reduce((sum, s) => sum + (s.marketCap || 0), 0) * 1e9,
+        }
+      })
+    },
+    refetchInterval: 10000,
+  })
 }
 
-function getMockLosers(count: number): TopLoser[] {
-  return Array.from({length: count}, (_, i) => ({
-    ticker: ['HMSP', 'ADRO', 'BYAN', 'INDF', 'UNVR'][i % 5],
-    name: ['HM Sampoerna', 'Adaro Energy', 'Bayan Resources', 'Indofood', 'Unilever Indonesia'][i % 5],
-    price: [825, 3125, 18750, 6725, 2850][i % 5],
-    change: [-15, -75, -250, -50, -50][i % 5],
-    changePercent: [-1.79, -2.34, -1.32, -0.74, -1.72][i % 5],
-    volume: Math.random() * 30_000_000,
-    value: Math.random() * 0.5e12,
-    frequency: Math.random() * 30000,
-    open: 840,
-    high: 845,
-    low: 820,
-    previousClose: 840,
-    sector: ['Consumer', 'Energy', 'Energy', 'Consumer', 'Consumer'][i % 5],
-  }))
+export function useAllStocks(): UseQueryResult<StockQuote[], Error> {
+  return useQuery<StockQuote[], Error>({
+    queryKey: ['allStocks'],
+    queryFn: async () => {
+      return idxStocks.map(s => {
+        const p = simulatePrice(s.ticker, s.marketCap)
+        return {
+          ticker: s.ticker,
+          name: s.name,
+          ...p,
+          marketCap: s.marketCap ? s.marketCap * 1e9 : undefined,
+          sector: s.sector,
+        }
+      })
+    },
+    refetchInterval: 5000,
+  })
+}
+
+export function useStockDetail(ticker: string | null): UseQueryResult<StockQuote | null, Error> {
+  return useQuery<StockQuote | null, Error>({
+    queryKey: ['stockDetail', ticker],
+    queryFn: async () => {
+      if (!ticker) return null
+      const stock = idxStocks.find(s => s.ticker === ticker)
+      if (!stock) return null
+      const p = simulatePrice(ticker, stock.marketCap)
+      return {
+        ticker: stock.ticker,
+        name: stock.name,
+        ...p,
+        marketCap: stock.marketCap ? stock.marketCap * 1e9 : undefined,
+        sector: stock.sector,
+        peRatio: 10 + Math.random() * 30,
+        pbRatio: 1 + Math.random() * 5,
+        dividendYield: Math.random() * 5,
+      } as StockQuote
+    },
+    refetchInterval: 5000,
+    enabled: !!ticker,
+  })
+}
+
+export function useStockCandles(ticker: string | null, interval: string = '1M'): UseQueryResult<CandleData[], Error> {
+  return useQuery<CandleData[], Error>({
+    queryKey: ['candles', ticker, interval],
+    queryFn: async () => {
+      if (!ticker) return []
+      const stock = idxStocks.find(s => s.ticker === ticker)
+      const basePrice = stock?.marketCap ? getBasePrice(ticker, stock.marketCap) : 5000
+      const count = interval === '1D' ? 93 : interval === '1W' ? 5 * 24 : interval === '1M' ? 22 :
+        interval === '3M' ? 66 : interval === '6M' ? 132 : interval === '1Y' ? 264 : 528
+      const candles: CandleData[] = []
+      const now = new Date()
+      let price = basePrice
+      for (let i = count; i >= 0; i--) {
+        const date = new Date(now)
+        date.setDate(date.getDate() - i)
+        const vol = price * 0.025
+        const open = price + (Math.random() - 0.5) * vol
+        const close = open + (Math.random() - 0.47) * vol
+        const high = Math.max(open, close) + Math.random() * vol * 0.4
+        const low = Math.min(open, close) - Math.random() * vol * 0.4
+        candles.push({
+          time: date.toISOString().split('T')[0],
+          open: Math.round(open),
+          high: Math.round(high),
+          low: Math.round(low),
+          close: Math.round(close),
+          volume: Math.round(Math.random() * 50000000),
+        })
+        price = close
+      }
+      return candles
+    },
+    enabled: !!ticker,
+    refetchInterval: 30000,
+  })
+}
+
+export function useSignals(): UseQueryResult<TradingSignal[], Error> {
+  return useQuery<TradingSignal[], Error>({
+    queryKey: ['signals'],
+    queryFn: async () => {
+      return (idxStocks
+        .filter(() => Math.random() > 0.85)
+        .slice(0, 10)
+        .map((s, i) => {
+          const p = simulatePrice(s.ticker, s.marketCap)
+          const rsi = 30 + Math.random() * 40
+          const isBullish = rsi < 40 || rsi > 60 ? rsi < 40 : Math.random() > 0.5
+          const direction = rsi < 35 ? 'STRONG_BUY' : rsi > 65 ? 'STRONG_SELL' : isBullish ? 'BUY' : 'SELL'
+          const price = p.price
+          const sl = direction.includes('BUY') ? price * (0.92 + Math.random() * 0.04) : price * (1.04 + Math.random() * 0.04)
+          const tp1 = direction.includes('BUY') ? price * (1.05 + Math.random() * 0.05) : price * (0.90 + Math.random() * 0.05)
+          const tp2 = direction.includes('BUY') ? price * (1.10 + Math.random() * 0.08) : price * (0.80 + Math.random() * 0.08)
+          const rr = Math.abs(price - tp1) / Math.abs(price - sl)
+          return {
+            id: `sig-${s.ticker}-${Date.now()}`,
+            ticker: s.ticker,
+            name: s.name,
+            direction: direction as TradingSignal['direction'],
+            entryPrice: Math.round(price),
+            stopLoss: Math.round(sl),
+            takeProfit1: Math.round(tp1),
+            takeProfit2: Math.round(tp2),
+            riskReward: Math.round(rr * 10) / 10,
+            confidence: 55 + Math.floor(Math.random() * 40),
+            reason: direction.includes('BUY')
+              ? `RSI at ${Math.round(rsi)} (oversold). MACD bullish crossover detected.`
+              : `RSI at ${Math.round(rsi)} (overbought). MACD bearish crossover.`,
+            indicators: {
+              rsi: Math.round(rsi),
+              macd: direction.includes('BUY') ? 'Bullish Cross' : 'Bearish Cross',
+              ma: direction.includes('BUY') ? 'Price above MA50' : 'Price below MA50',
+              bollinger: direction.includes('BUY') ? 'Lower band touch' : 'Upper band touch',
+            },
+            timestamp: Date.now(),
+            timeframe: '1D',
+          }
+        })) as TradingSignal[]
+    },
+    refetchInterval: 15000,
+  })
+}
+
+const FULL_NEWS: NewsItem[] = [
+  { id: 'n1', title: 'IHSG Ditutup Menguat, Investor Asing Catatkan Net Buy Terbesar Tahun Ini', source: 'Kontan', url: 'https://investasi.kontan.co.id/', timestamp: Date.now() - 1800000, sentiment: 'positive', tickers: ['BBCA', 'BBRI'], summary: 'Indeks Harga Saham Gabungan (IHSG) ditutup menguat pada perdagangan hari ini. Penguatan didorong oleh aksi beli investor asing yang mencatatkan net buy terbesar sepanjang tahun ini.' },
+  { id: 'n2', title: 'Bank Indonesia Pertahankan Suku Bunga di 6%', source: 'Bisnis.com', url: 'https://ekonomi.bisnis.com/', timestamp: Date.now() - 3600000, sentiment: 'neutral', tickers: ['BBCA', 'BBRI', 'BMRI'], summary: 'Bank Indonesia memutuskan untuk mempertahankan suku bunga acuan (BI-Rate) di level 6%.' },
+  { id: 'n3', title: 'BBRI Cetak Laba Bersih Rp 15 Triliun di Q1-2025, Tumbuh 12% YoY', source: 'CNBC Indonesia', url: 'https://www.cnbcindonesia.com/', timestamp: Date.now() - 5400000, sentiment: 'positive', tickers: ['BBRI'], summary: 'PT Bank Rakyat Indonesia membukukan laba bersih Rp 15 triliun pada Q1 2025.' },
+  { id: 'n4', title: 'TLKM Ekspansi Data Center Rp 5 Triliun', source: 'Kontan', url: 'https://investasi.kontan.co.id/', timestamp: Date.now() - 7200000, sentiment: 'positive', tickers: ['TLKM'], summary: 'Telkom investasi Rp 5 triliun untuk ekspansi data center di tiga kota.' },
+  { id: 'n5', title: 'Harga Batubara Anjlok, Saham ADRO dan BYAN Tertekan', source: 'Bloomberg Technoz', url: 'https://www.bloombergtechnoz.com/', timestamp: Date.now() - 9000000, sentiment: 'negative', tickers: ['ADRO', 'BYAN'], summary: 'Harga batubara turun ke level terendah 6 bulan, saham emiten terkoreksi.' },
+  { id: 'n6', title: 'RUPST GGRM Setujui Dividen Rp 2.000 per Saham', source: 'Investor Daily', url: 'https://investor.id/', timestamp: Date.now() - 10800000, sentiment: 'positive', tickers: ['GGRM'], summary: 'Dividen yield mencapai 8,2%, salah satu tertinggi di IDX.' },
+  { id: 'n7', title: 'Pemerintah Umumkan Insentif Fiskal Rp 100 Triliun untuk Manufaktur', source: 'Kemenkeu', url: 'https://www.kemenkeu.go.id/', timestamp: Date.now() - 12600000, sentiment: 'positive', tickers: ['ASII', 'INDF', 'SMGR'], summary: 'Paket insentif fiskal untuk mendorong sektor manufaktur nasional.' },
+  { id: 'n8', title: 'ASII Catat Penjualan 150.000 Unit Mobil di Q1', source: 'Bisnis.com', url: 'https://otomotif.bisnis.com/', timestamp: Date.now() - 14400000, sentiment: 'positive', tickers: ['ASII'], summary: 'Astra kuasai 55% pangsa pasar otomotif nasional.' },
+]
+
+export function useNews(): UseQueryResult<NewsItem[], Error> {
+  return useQuery<NewsItem[], Error>({
+    queryKey: ['news'],
+    queryFn: async () => FULL_NEWS,
+    refetchInterval: 60000,
+  })
+}
+
+export function useFilteredStocks(filters: { sector?: string; priceMin?: number; priceMax?: number; search?: string }): UseQueryResult<StockQuote[], Error> {
+  return useQuery<StockQuote[], Error>({
+    queryKey: ['filteredStocks', filters],
+    queryFn: async () => {
+      return idxStocks.map(s => {
+        const p = simulatePrice(s.ticker, s.marketCap)
+        return { ticker: s.ticker, name: s.name, ...p, marketCap: s.marketCap ? s.marketCap * 1e9 : undefined, sector: s.sector }
+      }).filter(s => {
+        if (filters.sector && s.sector !== filters.sector) return false
+        if (filters.priceMin && s.price < filters.priceMin) return false
+        if (filters.priceMax && s.price > filters.priceMax) return false
+        if (filters.search) {
+          const q = filters.search.toUpperCase()
+          if (!s.ticker.includes(q) && !s.name.toUpperCase().includes(q)) return false
+        }
+        return true
+      })
+    },
+    refetchInterval: 5000,
+  })
+}
+
+export function useUnusualVolume(): UseQueryResult<any[], Error> {
+  return useQuery<any[], Error>({
+    queryKey: ['unusualVolume'],
+    queryFn: async () => {
+      return idxStocks.map(s => {
+        const p = simulatePrice(s.ticker, s.marketCap)
+        const avgVol = 1000000 + Math.random() * 5000000
+        const ratio = p.volume / avgVol
+        return { ...s, ...p, avgVolume: avgVol, volumeRatio: ratio }
+      }).filter(s => s.volumeRatio > 1.5).sort((a, b) => b.volumeRatio - a.volumeRatio).slice(0, 20)
+    },
+    refetchInterval: 10000,
+  })
+}
+
+export function useSearchStocks(query: string): UseQueryResult<StockQuote[], Error> {
+  return useQuery<StockQuote[], Error>({
+    queryKey: ['searchStocks', query],
+    queryFn: async () => {
+      if (!query || query.length < 1) return []
+      const q = query.toUpperCase()
+      return idxStocks.filter(s => s.ticker.includes(q) || s.name.toUpperCase().includes(q)).slice(0, 20).map(s => {
+        const p = simulatePrice(s.ticker, s.marketCap)
+        return { ticker: s.ticker, name: s.name, ...p, sector: s.sector }
+      })
+    },
+    enabled: query.length >= 1,
+  })
 }

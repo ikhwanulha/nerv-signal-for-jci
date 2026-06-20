@@ -1,203 +1,170 @@
 'use client'
+import { useState, useMemo } from 'react'
 import { useStore } from '@/store/useStore'
-import { useState, useCallback } from 'react'
-import { cn, formatPrice, signalColor, signalLabel } from '@/lib/utils'
-import { SignalDirection } from '@/types'
-
-const DIRECTION_FILTERS: (SignalDirection | 'ALL')[] = ['ALL', 'STRONG_BUY', 'BUY', 'NEUTRAL', 'SELL', 'STRONG_SELL']
+import { useSignals } from '@/lib/api'
+import { cn, signalColor, signalLabel, getSignalBadge, formatPrice } from '@/lib/utils'
+import { TradingSignal, SignalDirection } from '@/types'
+import toast from 'react-hot-toast'
 
 export function Signals() {
-  const { signals, generateSignals, setSelectedTicker, loading } = useStore()
+  const { setSelectedTicker } = useStore()
+  const { data: signals, isLoading } = useSignals()
   const [filter, setFilter] = useState<SignalDirection | 'ALL'>('ALL')
-  const [generating, setGenerating] = useState(false)
+  const [hoveredSignal, setHoveredSignal] = useState<string | null>(null)
 
-  const filteredSignals = filter === 'ALL'
-    ? signals
-    : signals.filter(s => s.direction === filter)
+  const filtered = useMemo(() => 
+    filter === 'ALL' ? (signals || []) : (signals || []).filter(s => s.direction === filter),
+    [signals, filter]
+  )
 
-  const handleGenerate = useCallback(async () => {
-    setGenerating(true)
-    useStore.getState().setLoading('signals', true)
-    // Simulate async generation
-    await new Promise(r => setTimeout(r, 800))
-    generateSignals()
-    useStore.getState().setLoading('signals', false)
-    setGenerating(false)
-  }, [generateSignals])
-
-  const signalCounts = {
-    ALL: signals.length,
-    STRONG_BUY: signals.filter(s => s.direction === 'STRONG_BUY').length,
-    BUY: signals.filter(s => s.direction === 'BUY').length,
-    NEUTRAL: signals.filter(s => s.direction === 'NEUTRAL').length,
-    SELL: signals.filter(s => s.direction === 'SELL').length,
-    STRONG_SELL: signals.filter(s => s.direction === 'STRONG_SELL').length,
+  const filters = ['ALL', 'STRONG_BUY', 'BUY', 'NEUTRAL', 'SELL', 'STRONG_SELL'] as const
+  
+  const handleSignalClick = (signal: TradingSignal) => {
+    setSelectedTicker(signal.ticker)
+    toast(
+      `${signal.direction} ${signal.ticker} @ Rp${signal.entryPrice.toLocaleString('id-ID')} | SL: ${signal.stopLoss} | TP1: ${signal.takeProfit1}`,
+      { icon: signal.direction.includes('BUY') ? '🟢' : '🔴' }
+    )
   }
 
   return (
     <div className="p-2 space-y-2">
-      {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-lg font-bold font-mono text-[var(--text-primary)]">
-            🔄 TRADING SIGNALS
-          </h1>
-          <p className="text-[10px] text-[var(--text-dim)] font-mono">
-            Technical analysis signals generated from multi-indicator framework
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="text-[10px] text-[var(--text-dim)] font-mono">
-            {signals.length} signals
-          </span>
-          <button
-            onClick={handleGenerate}
-            disabled={generating || loading['signals']}
-            className="btn-terminal-active"
-          >
-            {generating || loading['signals'] ? '⏳ Scanning...' : '🎯 Generate Signals'}
-          </button>
-        </div>
+        <h1 className="text-lg font-bold font-mono">🔄 TRADING SIGNALS</h1>
+        <span className="text-xs font-mono text-[var(--text-dim)]">
+          {signals?.length || 0} signals · Auto-refresh 15s
+        </span>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex items-center gap-1 flex-wrap">
-        {DIRECTION_FILTERS.map(d => (
-          <button
-            key={d}
-            onClick={() => setFilter(d)}
+      {/* Filter bar */}
+      <div className="flex gap-1 flex-wrap">
+        {filters.map(f => (
+          <button key={f} onClick={() => setFilter(f)}
             className={cn(
-              'px-2.5 py-1 text-[10px] font-mono rounded border transition-colors',
-              filter === d
-                ? 'bg-[var(--bg-elevated)] border-[var(--accent)] text-[var(--accent)]'
-                : 'bg-transparent border-[var(--border-light)] text-[var(--text-dim)] hover:text-[var(--text-primary)]'
-            )}
-          >
-            {d === 'ALL' ? 'ALL' : signalLabel(d as SignalDirection)}
-            <span className="ml-1 opacity-60">({signalCounts[d]})</span>
+              'px-3 py-1 text-xs font-mono rounded transition-colors',
+              filter === f 
+                ? 'bg-[var(--accent)]/20 text-[var(--accent)] border border-[var(--accent)]/30'
+                : 'text-[var(--text-dim)] border border-transparent hover:text-[var(--text-primary)]'
+            )}>
+            {f === 'ALL' ? 'All' : f === 'STRONG_BUY' ? '🟢 Strong Buy' : f === 'BUY' ? '🟢 Buy' : f === 'NEUTRAL' ? '🟡 Neutral' : f === 'SELL' ? '🔴 Sell' : '🔴 Strong Sell'}
           </button>
         ))}
       </div>
 
-      {/* Signal Grid */}
-      {filteredSignals.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-2">
-          {filteredSignals.map(s => (
-            <div
-              key={s.id}
-              className="terminal-panel scan-line cursor-pointer hover:border-[var(--accent)]/30 transition-colors"
-              onClick={() => setSelectedTicker(s.ticker)}
+      {isLoading && (
+        <div className="text-center py-8 text-[var(--text-dim)] font-mono text-xs">Loading signals...</div>
+      )}
+
+      {/* Signal cards grid */}
+      {!isLoading && filtered.length === 0 && (
+        <div className="text-center py-8 text-[var(--text-dim)] font-mono text-xs">No signals match the current filter</div>
+      )}
+
+      <div className="grid grid-cols-2 gap-2">
+        {filtered.map(signal => {
+          const confidence = getSignalBadge(signal.confidence)
+          return (
+            <div 
+              key={signal.id}
+              className={cn(
+                'terminal-panel cursor-pointer transition-all hover:scale-[1.01]',
+                hoveredSignal === signal.id && 'ring-1 ring-[var(--accent)]'
+              )}
+              onClick={() => handleSignalClick(signal)}
+              onMouseEnter={() => setHoveredSignal(signal.id)}
+              onMouseLeave={() => setHoveredSignal(null)}
             >
-              {/* Card Header */}
+              {/* Signal header */}
               <div className="terminal-header">
                 <div className="flex items-center gap-2">
-                  <span className="font-bold text-[var(--text-primary)]">{s.ticker}</span>
-                  <span className="text-[10px] text-[var(--text-dim)]">{s.name}</span>
+                  <span className="font-bold text-sm">{signal.ticker}</span>
+                  <span className="text-[10px] text-[var(--text-dim)]">{signal.name}</span>
                 </div>
-                <span className={cn(
-                  'px-2 py-0.5 text-[10px] font-bold rounded',
-                )}
-                  style={{
-                    background: `${signalColor(s.direction)}20`,
-                    color: signalColor(s.direction),
+                <span 
+                  className="px-2 py-0.5 text-[10px] font-bold rounded"
+                  style={{ 
+                    background: `${signalColor(signal.direction)}20`,
+                    color: signalColor(signal.direction),
+                    border: `1px solid ${signalColor(signal.direction)}40`
                   }}
                 >
-                  {signalLabel(s.direction)}
+                  {signalLabel(signal.direction)}
                 </span>
               </div>
 
               <div className="p-3 space-y-2">
-                {/* Price Levels */}
-                <div className="grid grid-cols-3 gap-2 text-xs font-mono">
-                  <div>
-                    <div className="stat-label">Entry</div>
-                    <div className="text-[var(--text-primary)] font-semibold">{formatPrice(s.entryPrice)}</div>
+                {/* Price levels */}
+                <div className="grid grid-cols-4 gap-2 text-[10px] font-mono text-center">
+                  <div className="card-stats p-1.5">
+                    <div className="text-[var(--text-dim)]">Entry</div>
+                    <div className="font-bold text-sm">Rp{signal.entryPrice.toLocaleString('id-ID')}</div>
                   </div>
-                  <div>
-                    <div className="stat-label">Stop Loss</div>
-                    <div className="text-red">{formatPrice(s.stopLoss)}</div>
+                  <div className="card-stats p-1.5">
+                    <div className="text-[var(--text-dim)]">Stop Loss</div>
+                    <div className="font-bold text-sm text-red">
+                      Rp{signal.stopLoss.toLocaleString('id-ID')}
+                    </div>
                   </div>
-                  <div>
-                    <div className="stat-label">Take Profit 1</div>
-                    <div className="text-green">{formatPrice(s.takeProfit1)}</div>
+                  <div className="card-stats p-1.5">
+                    <div className="text-[var(--text-dim)]">TP1</div>
+                    <div className="font-bold text-sm text-green">
+                      Rp{signal.takeProfit1.toLocaleString('id-ID')}
+                    </div>
                   </div>
-                </div>
-
-                {/* R:R + Confidence */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <div className="stat-label">Risk : Reward</div>
-                    <div className="text-xs font-mono font-semibold text-[var(--accent)]">{s.riskReward}:1</div>
-                  </div>
-                  <div>
-                    <div className="stat-label">Confidence</div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-mono font-semibold">{s.confidence}%</span>
-                      <div className="flex-1 h-2 bg-[var(--bg-primary)] rounded-full overflow-hidden">
-                        <div
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{
-                            width: `${s.confidence}%`,
-                            background: s.confidence >= 70
-                              ? 'var(--green)'
-                              : s.confidence >= 50
-                                ? 'var(--amber)'
-                                : 'var(--red)',
-                          }}
-                        />
-                      </div>
+                  <div className="card-stats p-1.5">
+                    <div className="text-[var(--text-dim)]">TP2</div>
+                    <div className="font-bold text-sm text-green/80">
+                      Rp{signal.takeProfit2.toLocaleString('id-ID')}
                     </div>
                   </div>
                 </div>
 
+                {/* R:R & Confidence */}
+                <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-1">
+                    <span className="text-[10px] font-mono text-[var(--text-dim)]">R:R</span>
+                    <span className="text-sm font-mono font-bold">1:{signal.riskReward}</span>
+                  </div>
+                  <div className="flex items-center gap-1 flex-1">
+                    <span className="text-[10px] font-mono text-[var(--text-dim)]">Confidence</span>
+                    <div className="flex-1 h-2 rounded-full bg-[var(--bg-primary)] overflow-hidden max-w-24">
+                      <div 
+                        className="h-full rounded-full transition-all duration-500"
+                        style={{ 
+                          width: `${signal.confidence}%`,
+                          background: signal.confidence >= 85 ? 'var(--green)' : signal.confidence >= 70 ? 'var(--amber)' : 'var(--red-dim)'
+                        }}
+                      />
+                    </div>
+                    <span className={cn(
+                      'text-[10px] font-mono font-semibold px-1.5 py-0.5 rounded',
+                      confidence.label === 'HIGH' ? 'badge-green' : confidence.label === 'MEDIUM' ? 'badge-amber' : 'text-[var(--red)] bg-[var(--red)]/10'
+                    )}>
+                      {signal.confidence}%
+                    </span>
+                  </div>
+                </div>
+
                 {/* Indicators */}
-                <div className="grid grid-cols-2 gap-1 text-[10px] font-mono text-[var(--text-dim)]">
-                  <div>RSI: <span className="text-[var(--text-primary)]">{s.indicators.rsi.toFixed(1)}</span></div>
-                  <div>MACD: <span className="text-[var(--text-primary)]">{s.indicators.macd}</span></div>
-                  <div>MA: <span className="text-[var(--text-primary)]">{s.indicators.ma}</span></div>
-                  <div>Bollinger: <span className="text-[var(--text-primary)]">{s.indicators.bollinger}</span></div>
+                <div className="grid grid-cols-4 gap-1 text-[10px] font-mono">
+                  <div><span className="text-[var(--text-dim)]">RSI: </span>{signal.indicators.rsi.toFixed(1)}</div>
+                  <div><span className="text-[var(--text-dim)]">MACD: </span>{signal.indicators.macd}</div>
+                  <div><span className="text-[var(--text-dim)]">MA: </span>{signal.indicators.ma}</div>
+                  <div><span className="text-[var(--text-dim)]">BB: </span>{signal.indicators.bollinger}</div>
                 </div>
 
                 {/* Reason */}
-                <div className="text-[10px] font-mono text-[var(--text-dim)] leading-relaxed border-t border-[var(--border)] pt-2 mt-1">
-                  {s.reason}
-                </div>
-
-                {/* Timeframe + timestamp */}
-                <div className="flex justify-between text-[9px] font-mono text-[var(--text-dim)]">
-                  <span>TF: {s.timeframe}</span>
-                  <span>{new Date(s.timestamp).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' })}</span>
+                <div className="text-[10px] font-mono text-[var(--text-dim)] leading-relaxed p-2 rounded bg-[var(--bg-primary)]">
+                  {signal.reason}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      ) : (
-        <div className="terminal-panel p-8 text-center">
-          <div className="text-3xl mb-3">🔄</div>
-          <p className="text-sm text-[var(--text-dim)] mb-2">No signals found</p>
-          <p className="text-xs text-[var(--text-dim)] mb-4">
-            {filter !== 'ALL'
-              ? `No ${signalLabel(filter as SignalDirection)} signals currently. Try a different filter.`
-              : 'Click "Generate Signals" to scan the market for trading opportunities.'}
-          </p>
-          {filter !== 'ALL' ? (
-            <button onClick={() => setFilter('ALL')} className="btn-terminal">
-              Show All Signals
-            </button>
-          ) : (
-            <button onClick={handleGenerate} className="btn-terminal-active">
-              🎯 Generate Signals
-            </button>
-          )}
-        </div>
-      )}
+          )
+        })}
+      </div>
 
-      {/* Keyboard Shortcut Hint */}
       <div className="text-[10px] text-[var(--text-dim)] font-mono text-center py-1">
-        <span className="mx-2">← → Filter signals</span>
-        <span className="mx-2">Enter View details</span>
-        <span className="mx-2">G Generate signals</span>
+        Auto-generated every 15s from real-time price data · Click signal to see stock detail
       </div>
     </div>
   )

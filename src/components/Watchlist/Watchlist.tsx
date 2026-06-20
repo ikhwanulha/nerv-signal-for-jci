@@ -41,11 +41,14 @@ export function Watchlist() {
 
   const getTickerAlerts = (ticker: string) => alerts.filter(a => a.ticker === ticker)
 
-  // Price simulation using store's gainers/losers for display
-  const allStocks = useStore.getState().gainers.concat(useStore.getState().losers)
+  // Simulate price for watchlist display
   const getPrice = (ticker: string) => {
-    const s = allStocks.find(st => st.ticker === ticker)
-    return s ? { price: s.price, change: s.change, changePercent: s.changePercent } : null
+    const base = 1000 + (ticker.charCodeAt(0) + ticker.charCodeAt(1)) * 25
+    const noise = (Math.random() - 0.5) * base * 0.04
+    const price = Math.round(base + noise)
+    const change = Math.round((Math.random() - 0.5) * base * 0.04)
+    const changePercent = Math.round((change / base) * 10000) / 100
+    return { price, change, changePercent }
   }
 
   return (

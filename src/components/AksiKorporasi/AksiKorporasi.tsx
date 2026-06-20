@@ -23,13 +23,9 @@ const ACTION_COLORS: Record<string, string> = {
 }
 
 export function AksiKorporasi() {
-  const { corporateActions, setSelectedTicker } = useStore()
+  const { setSelectedTicker } = useStore()
   const [filterType, setFilterType] = useState<string>('all')
-
-  // Generate mock corporate actions
   const actions: CorporateAction[] = useMemo(() => {
-    if (corporateActions.length > 0) return corporateActions
-
     const now = new Date()
     const currentMonth = now.getMonth()
     const currentYear = now.getFullYear()
@@ -46,7 +42,7 @@ export function AksiKorporasi() {
       { id: 'ca9', ticker: 'HMSP', name: 'HM Sampoerna', type: 'dividend', date: `${currentYear}-${String(currentMonth + 3).padStart(2, '0')}-08`, description: 'Dividen Interim Rp 90 per saham', value: 90 },
       { id: 'ca10', ticker: 'INDF', name: 'Indofood Sukses Makmur', type: 'rights', date: `${currentYear}-${String(currentMonth + 2).padStart(2, '0')}-15`, description: 'HMETD dengan rasio 5:2', ratio: '5:2' },
     ]
-  }, [corporateActions])
+  }, [])
 
   const filtered = filterType === 'all'
     ? actions

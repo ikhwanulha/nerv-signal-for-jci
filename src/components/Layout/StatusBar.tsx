@@ -1,43 +1,57 @@
 'use client'
 import { useStore } from '@/store/useStore'
-import { formatNumber, formatPercent } from '@/lib/utils'
+import { useIHSG } from '@/lib/api'
+import { formatPercent, formatNumber } from '@/lib/utils'
 import { useEffect, useState } from 'react'
 
 export function StatusBar() {
-  const { ihsg, activePanel, panels, lastUpdate } = useStore()
+  const { activePanel, panels } = useStore()
+  const { data: ihsg } = useIHSG()
   const [time, setTime] = useState(new Date())
   const [marketStatus, setMarketStatus] = useState<'OPEN' | 'CLOSED' | 'PRE'>('CLOSED')
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000)
-    // Simulate market hours (9:00-16:00)
-    const h = new Date().getHours()
-    if (h >= 9 && h < 16) setMarketStatus('OPEN')
-    else if (h >= 8 && h < 9) setMarketStatus('PRE')
-    else setMarketStatus('CLOSED')
-    return () => clearInterval(timer)
+    const checkMarket = () => {
+      const h = new Date().getHours()
+      const m = new Date().getMinutes()
+      const totalMin = h * 60 + m
+      if (totalMin >= 540 && totalMin < 960) setMarketStatus('OPEN') // 09:00 - 16:00
+      else if (totalMin >= 480 && totalMin < 540) setMarketStatus('PRE')
+      else setMarketStatus('CLOSED')
+    }
+    checkMarket()
+    const marketTimer = setInterval(checkMarket, 60000)
+    return () => { clearInterval(timer); clearInterval(marketTimer) }
   }, [])
 
   const activePanelLabel = panels.find(p => p.id === activePanel)?.label || 'Dashboard'
 
+  // Detect when data was last fetched from React Query cache freshness
+  const lastUpdateStr = time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+
   return (
     <footer className="h-6 bg-[var(--bg-elevated)] border-t border-[var(--border)] flex items-center px-3 text-[10px] font-mono text-[var(--text-dim)] select-none shrink-0">
-      {/* Left side */}
+      {/* Left */}
       <div className="flex items-center gap-3">
         <span className="flex items-center gap-1">
           <span className={`w-1.5 h-1.5 rounded-full ${
             marketStatus === 'OPEN' ? 'bg-[var(--green)]' : 
             marketStatus === 'PRE' ? 'bg-[var(--amber)]' : 'bg-[var(--red-dim)]'
           }`} />
-          {marketStatus === 'OPEN' ? 'MARKET OPEN' : marketStatus === 'PRE' ? 'PRE-OPEN' : 'CLOSED'}
+          {marketStatus === 'OPEN' ? 'LIVE' : marketStatus === 'PRE' ? 'PRE-OPEN' : 'CLOSED'}
         </span>
         <span className="text-[var(--border-light)]">|</span>
-        <span>IHSG: {ihsg.price.toFixed(2)}</span>
-        <span className={ihsg.change >= 0 ? 'text-green' : 'text-red'}>
-          {formatPercent(ihsg.changePercent)}
-        </span>
-        <span className="text-[var(--border-light)]">|</span>
-        <span>Vol: {formatNumber(ihsg.volume)}</span>
+        {ihsg && (
+          <>
+            <span>IHSG: {ihsg.price.toFixed(2)}</span>
+            <span className={ihsg.change >= 0 ? 'text-green' : 'text-red'}>
+              {formatPercent(ihsg.changePercent)}
+            </span>
+            <span className="text-[var(--border-light)]">|</span>
+            <span>Vol: {formatNumber(ihsg.volume)}</span>
+          </>
+        )}
       </div>
 
       {/* Center */}
@@ -45,10 +59,14 @@ export function StatusBar() {
         {activePanelLabel}
       </div>
 
-      {/* Right side */}
+      {/* Right */}
       <div className="flex items-center gap-3">
+        <span className="text-[var(--accent)]">
+          ◉ LIVE
+        </span>
+        <span className="text-[var(--border-light)]">|</span>
         <span>
-          Last: {lastUpdate.market ? new Date(lastUpdate.market).toLocaleTimeString('id-ID') : '---'}
+          Last: {lastUpdateStr}
         </span>
         <span className="text-[var(--border-light)]">|</span>
         <span>
@@ -56,6 +74,10 @@ export function StatusBar() {
         </span>
         <span className="text-[var(--accent)] font-semibold">
           {time.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} WIB
+        </span>
+        <span className="flex items-center gap-1 ml-1">
+          <span className="w-1.5 h-1.5 rounded-full bg-[var(--green)] animate-pulse-slow" />
+          <span className="text-[9px]">5s</span>
         </span>
       </div>
     </footer>
